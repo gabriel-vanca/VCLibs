@@ -114,8 +114,10 @@ If you do not want to install or rely on Chocolatey, you can use the script I ha
 To install it, run:
 
 ```
-$install =  Invoke-RestMethod https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1
-Invoke-Expression $install
+$scriptPath = "https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1"
+$WebClient = New-Object Net.WebClient
+$installScript = $WebClient.DownloadString($scriptPath)
+Invoke-Expression $installScript
 ```
 
 This deployment solution was tested on:
@@ -128,3 +130,13 @@ This deployment solution was tested on:
 * Windows Server 2022 vNext (Windows Server 2025)
 
 ⚠️ In a small number of attempts when running in Windows 11 Sandbox, installing the VCLibs via this method and then installing Terminal via Chocolatey would result in Terminal failing to start, while installing Terminal via WinGet would would perfectly fine.
+
+To force reinstall (not recommended), you can run the following:
+
+```
+$scriptPath = "https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1"
+$WebClient = New-Object Net.WebClient
+$installScript = $WebClient.DownloadString($scriptPath)
+$installScript_sb = [Scriptblock]::Create($installScript)
+Invoke-Command -ScriptBlock $installScript_sb -ArgumentList [$True] -NoNewScope
+```
