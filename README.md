@@ -114,9 +114,7 @@ If you do not want to install or rely on Chocolatey, you can use the script I ha
 To install it, run:
 
 ```
-$scriptPath = "https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1"
-$WebClient = New-Object Net.WebClient
-$installScript = $WebClient.DownloadString($scriptPath)
+$installScript =  Invoke-RestMethod https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1
 Invoke-Expression $installScript
 ```
 
@@ -134,9 +132,7 @@ This deployment solution was tested on:
 To force reinstall (not recommended), you can run the following:
 
 ```
-$scriptPath = "https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1"
-$WebClient = New-Object Net.WebClient
-$installScript = $WebClient.DownloadString($scriptPath)
+$installScript = Invoke-RestMethod https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1
 $installScript_sb = [Scriptblock]::Create($installScript)
 Invoke-Command -ScriptBlock $installScript_sb -ArgumentList [$True] -NoNewScope
 ```
