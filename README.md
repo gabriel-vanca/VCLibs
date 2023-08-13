@@ -118,14 +118,14 @@ $installScript =  Invoke-RestMethod https://raw.githubusercontent.com/gabriel-va
 Invoke-Expression $installScript
 ```
 
-This deployment solution was tested on:
+🪟This deployment solution was tested on:
 
-* Windows 10
-* Windows 11
-* Windows 11 Sandbox
-* Windows Server 2019
-* Windows Server 2022
-* Windows Server 2022 vNext (Windows Server 2025)
+* ✅ Windows 10
+* ✅Windows 11
+* ✅Windows 11 Sandbox
+* ✅Windows Server 2019
+* ✅Windows Server 2022
+* ✅Windows Server 2022 vNext (Windows Server 2025)
 
 ⚠️ In a small number of attempts when running in Windows 11 Sandbox, installing the VCLibs via this method and then installing Terminal via Chocolatey would result in Terminal failing to start, while installing Terminal via WinGet would would perfectly fine.
 
