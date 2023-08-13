@@ -98,7 +98,8 @@ Add-AppxPackage $fileDownloadLocalPath
 # Removing installation file
 Remove-Item $fileDownloadLocalPath 
 
-if(Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor) {
+$vclibsList = Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor
+if([string]::IsNullorEmpty($vclibsList)) {
 
     Write-Host "Microsoft.VCLibs.140.00.UWPDesktop sucessfully installed" -ForegroundColor DarkGreen
 
