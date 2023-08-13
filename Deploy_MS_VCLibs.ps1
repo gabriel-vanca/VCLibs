@@ -50,7 +50,7 @@ if ($windowsVersion.Build -lt "16299") {
 
 
 if($ForceReinstall -eq $False) {
-    if(IsNullorEmpty(Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor)) {
+    if([string]::IsNullorEmpty(Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor)) {
         Write-Host "Microsoft.VCLibs.140.00.UWPDesktop missing" -ForegroundColor DarkRed
         Write-Warning "VCLibs package required for WinGet and Terminal installation."
     } else {

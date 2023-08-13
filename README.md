@@ -114,7 +114,8 @@ If you do not want to install or rely on Chocolatey, you can use the script I ha
 To install it, run:
 
 ```
-
+$install =  Invoke-RestMethod https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1
+Invoke-Expression $install
 ```
 
 This deployment solution was tested on:
