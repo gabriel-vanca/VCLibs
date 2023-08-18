@@ -55,7 +55,7 @@ if($ForceReinstall -eq $False) {
         Write-Host "Microsoft.VCLibs.140.00.UWPDesktop missing" -ForegroundColor DarkRed
         Write-Warning "VCLibs package required for WinGet and Terminal installation."
     } else {
-        Write-Host "The installed version of Microsoft.VCLibs.140.00.UWPDesktop is the same as newer as the version we are looking for." -ForegroundColor DarkGreen
+        Write-Host "The installed version of Microsoft.VCLibs.140.00.UWPDesktop is the same or newer as the version we are looking for." -ForegroundColor DarkGreen
         Start-Sleep -Seconds 7
         Exit 0
     }
