@@ -57,7 +57,7 @@ if($ForceReinstall -eq $False) {
     } else {
         Write-Host "The installed version of Microsoft.VCLibs.140.00.UWPDesktop is the same or newer as the version we are looking for." -ForegroundColor DarkGreen
         Start-Sleep -Seconds 7
-        Exit 0
+        Return
     }
 } else {
     Write-Host "FORCED (RE)INSTALL ENABLED." -ForegroundColor DarkYellow
@@ -102,10 +102,7 @@ Remove-Item $fileDownloadLocalPath
 
 $vclibsList = Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor
 if([string]::IsNullorEmpty($vclibsList)) {
-
     Write-Host "Microsoft.VCLibs.140.00.UWPDesktop sucessfully installed" -ForegroundColor DarkGreen
-    Exit 0
-
 } else {
     Write-Host "Microsoft.VCLibs.140.00.UWPDesktop installation failure" -ForegroundColor DarkRed
     Write-Host "This script will terminate in 20 seconds" -ForegroundColor DarkRed
