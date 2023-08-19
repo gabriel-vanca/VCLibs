@@ -102,12 +102,12 @@ Remove-Item $fileDownloadLocalPath
 
 $vclibsList = Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor
 if([string]::IsNullorEmpty($vclibsList)) {
-    Write-Host "Microsoft.VCLibs.140.00.UWPDesktop sucessfully installed" -ForegroundColor DarkGreen
-} else {
     Write-Host "Microsoft.VCLibs.140.00.UWPDesktop installation failure" -ForegroundColor DarkRed
-    Write-Host "This script will terminate in 20 seconds" -ForegroundColor DarkRed
-    Start-Sleep -Seconds 20
+    Write-Host "This script will terminate in 5 seconds" -ForegroundColor DarkRed
+    Start-Sleep -Seconds 5
     throw "Microsoft.VCLibs.140.00.UWPDesktop installation failure"
+} else {
+    Write-Host "Microsoft.VCLibs.140.00.UWPDesktop sucessfully installed" -ForegroundColor DarkGreen
 }
 
 
