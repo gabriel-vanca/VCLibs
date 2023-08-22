@@ -109,5 +109,3 @@ if([string]::IsNullorEmpty($vclibsList)) {
 } else {
     Write-Host "Microsoft.VCLibs.140.00.UWPDesktop sucessfully installed" -ForegroundColor DarkGreen
 }
-
-
