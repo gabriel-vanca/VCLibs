@@ -27,7 +27,10 @@
 	Author: Gabriel Vanca
 #>
 
-param ([Boolean]$ForceReinstall = $False)
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $False)] [Switch]$ForceReinstall = $False
+)
 
 [String]$VersionToLookFor = "14.0.30704.0"
 
