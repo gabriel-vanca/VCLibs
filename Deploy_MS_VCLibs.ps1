@@ -1,11 +1,19 @@
 <#
 .SYNOPSIS
-    Installs Microsoft VCLibs
+    Installs and updates Microsoft VCLibs
 .DESCRIPTION
 	Installs Microsoft VCLibs if no VCLibs.14 is detected at all,
     or updates it if the subversion detected is too old.
     # This can only be installed in a user context (*-AppxPackage).
     # You cannot use *-AppxProvisionedPackage as it produced 'Element not found'.
+    
+    Deployment tested on:
+        - Windows 10
+        - Windows 11
+        - Windows Sandbox
+        - Windows Server 2019
+        - Windows Server 2022
+        - Windows Server 2022 vNext (Windows Server 2025)
 .PARAMETER ForceReinstall
     (Optional)
     Forces reinstall.
