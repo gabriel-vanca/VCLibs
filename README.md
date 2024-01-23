@@ -120,7 +120,7 @@ Invoke-Expression $installScript
 
 🪟This deployment solution was tested on:
 
-* ✅ Windows 10
+* ✅Windows 10
 * ✅Windows 11
 * ✅Windows 11 Sandbox
 * ✅Windows Server 2019
