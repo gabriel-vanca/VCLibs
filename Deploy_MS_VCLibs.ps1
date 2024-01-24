@@ -122,10 +122,39 @@ if([string]::IsNullorEmpty($vclibsList)) {
     Write-Host "Microsoft.VCLibs.140.00.UWPDesktop sucessfully installed" -ForegroundColor DarkGreen
 }
 
-# This is necessary to check when running in Windows Sandbox and possibly on Windows Server
+# This is necessary to check when running in Windows Sandbox and on Windows Server
+# Winget and Windows Terminal will not run without Microsoft.UI.Xaml
+# Both versions 2.7 and 2.8 are necessary
 Write-Host "Checking Microsoft UI XAML status" -ForegroundColor DarkYellow
 
-[String]$UIXAML_VersionToLookFor = "8.2306.22001.0"
+[String]$UIXAML_VersionToLookFor = "7.2208.15002.0"
+$UIXAML_List = Get-AppxPackage Microsoft.UI.Xaml.2.7 | Where-Object version -ge $UIXAML_VersionToLookFor
+if([string]::IsNullorEmpty($UIXAML_List)) {
+    Write-Host "Microsoft.UI.Xaml version missing" -ForegroundColor DarkMagenta
+    Write-Host "Initialising install of Microsoft.UI.Xaml" -ForegroundColor DarkYellow
+
+    $WebClient = New-Object System.Net.WebClient
+    # https://github.com/microsoft/microsoft-ui-xaml/releases?q=xaml&expanded=true
+    $fileURL = "https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.7.3/Microsoft.UI.Xaml.2.7.x64.appx"
+    $fileDownloadLocalPath = "$env:Temp\Microsoft.UI.Xaml.2.7.x64.appx"
+    $WebClient.DownloadFile($fileURL, $fileDownloadLocalPath)
+
+    # Installing the component
+    Add-AppxPackage $fileDownloadLocalPath 
+    # Removing installation file
+    Remove-Item $fileDownloadLocalPath 
+
+    $UIXAML_List = Get-AppxPackage Microsoft.UI.Xaml.2.7 | Where-Object version -ge $UIXAML_VersionToLookFor
+    if([string]::IsNullorEmpty($UIXAML_List)) {
+        Write-Error "Microsoft UI Xaml installation failed."
+    } else {
+        Write-Host "Microsoft UI Xaml installed successfully" -ForegroundColor DarkGreen
+    }
+} else {
+    Write-Host "Microsoft.UI.Xaml.2.7 present" -ForegroundColor DarkGreen
+}
+
+$UIXAML_VersionToLookFor = "8.2306.22001.0"
 $UIXAML_List = Get-AppxPackage Microsoft.UI.Xaml.2.8 | Where-Object version -ge $UIXAML_VersionToLookFor
 if([string]::IsNullorEmpty($UIXAML_List)) {
     Write-Host "Microsoft.UI.Xaml version missing" -ForegroundColor DarkMagenta
@@ -148,4 +177,6 @@ if([string]::IsNullorEmpty($UIXAML_List)) {
     } else {
         Write-Host "Microsoft UI Xaml installed successfully" -ForegroundColor DarkGreen
     }
-} 
+} else {
+    Write-Host "Microsoft.UI.Xaml.2.8 present" -ForegroundColor DarkGreen
+}

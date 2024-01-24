@@ -71,8 +71,6 @@ While writing this guide, Chocolatey added VCLibs as a separate package on its C
 choco install microsoft-vclibs -y
 ```
 
-⚠️ In a small number of attempts when running in Windows 11 Sandbox, installing the VCLibs via `choco install microsoft-vclibs `would result in Terminal failing start, while installing via `choco install microsoft-vclibs` would work perfectly fine.
-
 **Note that this package is updated manually, therefore it might not always hold the latest version. Read Solution 2 for a way to solve that problem.**
 
 > If you're looking for instructions on how to install and use Chocolatey, see my dedicated repo at: https://github.com/gabriel-vanca/Chocolatey
@@ -87,8 +85,6 @@ choco install winget-cli -y
 
 Note that this will also install VCLibs if you haven't already installed it.
 
-⚠️ In a small number of attempts when running in Windows 11 Sandbox, installing the VCLibs via `choco install microsoft-vclibs `would result in Terminal failing start, while installing via `choco install microsoft-vclibs` would work perfectly fine.
-
 #### Terminal
 
 Make sure VCLibs is installed first by either installing the VCLibs package directly as indicated above, or at the same time as WinGet.
@@ -102,6 +98,8 @@ choco install microsoft-windows-terminal -y
 ```
 
 ##### via WinGet
+
+⚠️ The WinGet install option seems to fail in Windows Sandbox. The Chocolatey install version works correctly.
 
 ```
 winget install --id=Microsoft.WindowsTerminal  -e
