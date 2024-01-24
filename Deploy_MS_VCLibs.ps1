@@ -14,6 +14,8 @@
         - Windows Server 2019
         - Windows Server 2022
         - Windows Server 2022 vNext (Windows Server 2025)
+
+    If necessary, Microsoft.UI.Xaml will be installed/updated as well.
 .PARAMETER ForceReinstall
     (Optional)
     Forces reinstall.
@@ -59,7 +61,6 @@ if ($windowsVersion.Build -lt "16299") {
     throw "This package requires a minimum of Windows 10 / Server 2019 version 1709 / OS build 16299."
 }
 
-
 if($ForceReinstall -eq $False) {
     $vclibsList = Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor
     if([string]::IsNullorEmpty($vclibsList)) {
@@ -80,7 +81,7 @@ if($ForceReinstall -eq $False) {
 }
 
 
-Write-Host "Installing VCLibs package"
+Write-Host "Installing VCLibs package" -ForegroundColor DarkYellow
 
 # Downloading necessary graphical component, usually for Windows Server or Sandbox deployments
 # (https://docs.microsoft.com/en-us/troubleshoot/developer/visualstudio/cpp/libraries/c-runtime-packages-desktop-bridge)
@@ -120,3 +121,31 @@ if([string]::IsNullorEmpty($vclibsList)) {
 } else {
     Write-Host "Microsoft.VCLibs.140.00.UWPDesktop sucessfully installed" -ForegroundColor DarkGreen
 }
+
+# This is necessary to check when running in Windows Sandbox and possibly on Windows Server
+Write-Host "Checking Microsoft UI XAML status" -ForegroundColor DarkYellow
+
+[String]$UIXAML_VersionToLookFor = "8.2306.22001.0"
+$UIXAML_List = Get-AppxPackage Microsoft.UI.Xaml.2.8 | Where-Object version -ge $UIXAML_VersionToLookFor
+if([string]::IsNullorEmpty($UIXAML_List)) {
+    Write-Host "Microsoft.UI.Xaml version missing" -ForegroundColor DarkMagenta
+    Write-Host "Initialising install of Microsoft.UI.Xaml" -ForegroundColor DarkYellow
+
+    $WebClient = New-Object System.Net.WebClient
+    # https://github.com/microsoft/microsoft-ui-xaml/releases?q=xaml&expanded=true
+    $fileURL = "https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.5/Microsoft.UI.Xaml.2.8.x64.appx"
+    $fileDownloadLocalPath = "$env:Temp\Microsoft.UI.Xaml.2.8.x64.appx"
+    $WebClient.DownloadFile($fileURL, $fileDownloadLocalPath)
+
+    # Installing the component
+    Add-AppxPackage $fileDownloadLocalPath 
+    # Removing installation file
+    Remove-Item $fileDownloadLocalPath 
+
+    $UIXAML_List = Get-AppxPackage Microsoft.UI.Xaml.2.8 | Where-Object version -ge $UIXAML_VersionToLookFor
+    if([string]::IsNullorEmpty($UIXAML_List)) {
+        Write-Error "Microsoft UI Xaml installation failed."
+    } else {
+        Write-Host "Microsoft UI Xaml installed successfully" -ForegroundColor DarkGreen
+    }
+} 
