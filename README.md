@@ -63,7 +63,7 @@ Installing Winget through Chocolatey seems to go in the right way and install th
 
 The latest version of winget was succesfully installed and now, because of the newly installed VCLibs, Terminal started working too.
 
-#### VCLibs
+#### 1.1. VCLibs
 
 While writing this guide, Chocolatey added VCLibs as a separate package on its Community Repository. Therefore you don't need to install WinGet anymore if you just want the Terminal (or some other app) working. Just run:
 
@@ -71,13 +71,13 @@ While writing this guide, Chocolatey added VCLibs as a separate package on its C
 choco install microsoft-vclibs -y
 ```
 
-**Note that this package is updated manually, therefore it might not always hold the latest version. Read Solution 2 for a way to solve that problem.**
+**⚠️Note that this package is updated manually, therefore it might not always hold the latest version. Read Solution 2 for a way to solve that problem.**
 
 > If you're looking for instructions on how to install and use Chocolatey, see my dedicated repo at: https://github.com/gabriel-vanca/Chocolatey
 
 If you still want to install WinGet and Terminal, read below.
 
-#### WinGet
+#### 1.2. (Optional) WinGet
 
 ```
 choco install winget-cli -y
@@ -85,7 +85,7 @@ choco install winget-cli -y
 
 Note that this will also install VCLibs if you haven't already installed it.
 
-#### Terminal
+#### 1.3. Terminal
 
 Make sure VCLibs is installed first by either installing the VCLibs package directly as indicated above, or at the same time as WinGet.
 
@@ -99,7 +99,7 @@ choco install microsoft-windows-terminal -y
 
 ##### via WinGet
 
-⚠️ The WinGet install option seems to fail in Windows Sandbox. The Chocolatey install version works correctly.
+⚠️ The WinGet install option seems to ocassionally fail in Windows 11 Sandbox. The Chocolatey install version works correctly.
 
 ```
 winget install --id=Microsoft.WindowsTerminal  -e
@@ -107,7 +107,7 @@ winget install --id=Microsoft.WindowsTerminal  -e
 
 ### Solution 2: Direct Install
 
-If you do not want to install or rely on Chocolatey, you can use the script I have written to download and install VCLibs.
+I have written a script that checks for VCLibs presence and installs it if missing. By default it uses Chocolatey to install, but if that fails it uses manual install.
 
 To install it, run:
 
@@ -116,7 +116,7 @@ $installScript =  Invoke-RestMethod https://raw.githubusercontent.com/gabriel-va
 Invoke-Expression $installScript
 ```
 
-🪟This deployment solution was tested on:
+#### 🪟This deployment solution was tested on:
 
 * ✅Windows 10
 * ✅Windows 11
@@ -125,12 +125,32 @@ Invoke-Expression $installScript
 * ✅Windows Server 2022
 * ✅Windows Server 2022 vNext (Windows Server 2025)
 
-⚠️ In a small number of attempts when running in Windows 11 Sandbox, installing the VCLibs via this method and then installing Terminal via Chocolatey would result in Terminal failing to start, while installing Terminal via WinGet would would perfectly fine.
+#### (Optional) Bypass Chocolatey
+
+❗If you do not want to install or rely on Chocolatey, you can use my script with the bypass Chocolatey parameter:
+
+```
+$VCLibs_scriptPath = "https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1"
+$WebClient = New-Object Net.WebClient
+$VCLibs_program = $WebClient.DownloadString($VCLibs_scriptPath)
+$VCLibs_program_sb = [Scriptblock]::Create($VCLibs_program)
+$BypassChocolatey = $True
+$ForceReinstall = $False
+Invoke-Command -ScriptBlock $VCLibs_program_sb -ArgumentList ($BypassChocolatey, $ForceReinstall) -NoNewScope
+
+```
+
+#### (Optional) Force Install
 
 To force reinstall (not recommended), you can run the following:
 
 ```
-$installScript = Invoke-RestMethod https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1
-$installScript_sb = [Scriptblock]::Create($installScript)
-Invoke-Command -ScriptBlock $installScript_sb -ArgumentList [$True] -NoNewScope
+$VCLibs_scriptPath = "https://raw.githubusercontent.com/gabriel-vanca/VCLibs/main/Deploy_MS_VCLibs.ps1"
+$WebClient = New-Object Net.WebClient
+$VCLibs_program = $WebClient.DownloadString($VCLibs_scriptPath)
+$VCLibs_program_sb = [Scriptblock]::Create($VCLibs_program)
+$BypassChocolatey = $False
+$ForceReinstall = $True
+Invoke-Command -ScriptBlock $VCLibs_program_sb -ArgumentList ($BypassChocolatey, $ForceReinstall) -NoNewScope
+
 ```

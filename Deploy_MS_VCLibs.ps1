@@ -4,18 +4,26 @@
 .DESCRIPTION
 	Installs Microsoft VCLibs if no VCLibs.14 is detected at all,
     or updates it if the subversion detected is too old.
-    # This can only be installed in a user context (*-AppxPackage).
-    # You cannot use *-AppxProvisionedPackage as it produced 'Element not found'.
+    ⚠️This is normally only necessary on Windows Server and Windows Sandbox,
+    but ocasionally it is required on consumer deployments too.
+    Read the GitHub repo description for a more in-depth investigation.
+    ⚠️ Winget and Windows Terminal will not run without Microsoft VCLibs
     
-    Deployment tested on:
-        - Windows 10
-        - Windows 11
-        - Windows Sandbox
-        - Windows Server 2019
-        - Windows Server 2022
-        - Windows Server 2022 vNext (Windows Server 2025)
-
-    If necessary, Microsoft.UI.Xaml will be installed/updated as well.
+    🪟Deployment tested on:
+        - ✅Windows 10
+        - ✅Windows 11
+        - ✅Windows Sandbox
+        - ✅Windows Server 2019
+        - ✅Windows Server 2022
+        - ✅Windows Server 2022 vNext (Windows Server 2025)
+.PARAMETER BypassChocolatey
+    (Optional)
+    By default disabled. If Chocolatey is installed on the system,
+    Chocolatey will be used to install/update VCLibs.
+    If Chocolatey is not present, this parameter has no effect.
+    If Chocolatey is installed but Chocolatey install fails for
+    whatever reason, the manual install will occur as if the bypass
+    was activated.
 .PARAMETER ForceReinstall
     (Optional)
     Forces reinstall.
@@ -27,10 +35,7 @@
     We also don't want to just remove the same version again either for similar reasons.
     ForceReinstall therefore forces uninstallation and (re)installation.
 .EXAMPLE
-    To use the default Chocolatey Community Repository, run this:
-	    PS> ./Chocolatey_Deploy
-    To use a local repository, run either of these:
-        PS> ./Chocolatey_Deploy "http://10.10.10.1:8624/nuget/Thoth/" "THOTH"
+    PS> ./Deploy_MS_VCLibs
 .LINK
 	https://github.com/gabrielvanca/VCLibs
 .NOTES
@@ -39,10 +44,15 @@
 
 [CmdletBinding()]
 param (
+    [Parameter(Mandatory = $False)] [Switch]$BypassChocolatey = $False,
     [Parameter(Mandatory = $False)] [Switch]$ForceReinstall = $False
 )
 
 [String]$VersionToLookFor = "14.0.30704.0"
+[Switch]$ChocolateyInstalled = $False
+[Switch]$MustUseChocolatey = $False
+[Switch]$MustUninstall = $False
+
 
 #Requires -RunAsAdministrator
 
@@ -61,27 +71,79 @@ if ($windowsVersion.Build -lt "16299") {
     throw "This package requires a minimum of Windows 10 / Server 2019 version 1709 / OS build 16299."
 }
 
-if($ForceReinstall -eq $False) {
-    $vclibsList = Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor
-    if([string]::IsNullorEmpty($vclibsList)) {
-        Write-Host "Microsoft.VCLibs.140.00.UWPDesktop missing" -ForegroundColor DarkRed
-        Write-Warning "VCLibs package required for WinGet and Terminal installation."
+# Expected path of the choco.exe file.
+$chocoInstallPath = "$Env:ProgramData/chocolatey/choco.exe"
+if (Test-Path "$chocoInstallPath") {
+    $ChocolateyInstalled = $True
+    if($BypassChocolatey) {
+        Write-Error "Chocolatey is present, but bypass is enabled" -ForegroundColor DarkYellow
+        Write-Error "Proceeding with manual install." -ForegroundColor DarkYellow
+        $MustUseChocolatey = $False
+        Start-Sleep -Seconds 5
     } else {
-        Write-Host "The installed version of Microsoft.VCLibs.140.00.UWPDesktop is the same or newer as the version we are looking for." -ForegroundColor DarkGreen
-        Start-Sleep -Seconds 1
-        Return
+        Write-Error "Chocolatey is present. Proceeding with Chocolatey install." -ForegroundColor DarkGreen
+        $MustUseChocolatey = $True
     }
 } else {
+    $ChocolateyInstalled = $False
+    $MustUseChocolatey = $False
+    if(!($BypassChocolatey)) {
+        Write-Host "Chocolatey is not present." -ForegroundColor DarkMagenta
+        Start-Sleep -Seconds 5
+    }
+    Write-Error "Proceeding with manual install." -ForegroundColor DarkYellow
+}
+
+
+# TODO BELOW
+
+
+
+if($ForceReinstall) {
     Write-Host "FORCED (RE)INSTALL ENABLED." -ForegroundColor DarkYellow
-    Start-Sleep -Seconds 7
     Write-Host "Skipping version check." -ForegroundColor DarkYellow
+    $MustUninstall = $True
+} else {
+    $vclibsList = Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor
+    if([string]::IsNullorEmpty($vclibsList)) {
+        Write-Host "Microsoft.VCLibs.140.00.UWPDesktop missing or too old" -ForegroundColor DarkRed
+        Write-Warning "VCLibs package required for WinGet and Terminal installation."
+        $MustUninstall = $True
+    } else {
+        Write-Host "The installed version of Microsoft.VCLibs.140.00.UWPDesktop is the same or newer as the version we are looking for." -ForegroundColor DarkGreen
+        $MustUninstall = $False
+        Return
+    }
+}
+
+if($MustUninstall) {
     Write-Host "Initialising uninstall." -ForegroundColor DarkYellow
     Write-Warning "If anything relies on VCLibs, even if not turned on, the uninstall will fail."
+    Start-Sleep -Seconds 7
+    if($ChocolateyInstalled) {
+        try {
+            choco uninstall microsoft-vclibs
+        } catch {
+            # Expected to fail if vclibs not installed via Chocolatey
+            # No need to handle the error
+        }
+    }
     Get-AppxPackage "Microsoft.VCLibs.140.00.UWPDesktop" | remove-AppxPackage -allusers
 }
 
 
 Write-Host "Installing VCLibs package" -ForegroundColor DarkYellow
+
+if($MustUseChocolatey) {
+    try {
+        choco install microsoft-vclibs -y --ignore-checksums
+        Write-Host "Microsoft.VCLibs.140.00.UWPDesktop sucessfully installed" -ForegroundColor DarkGreen
+        Return
+    } catch {
+        $MustUseChocolatey = $False
+        # No need to handle the error in catch{}. Error handled bellow automatically through manual install
+    }
+}
 
 # Downloading necessary graphical component, usually for Windows Server or Sandbox deployments
 # (https://docs.microsoft.com/en-us/troubleshoot/developer/visualstudio/cpp/libraries/c-runtime-packages-desktop-bridge)
@@ -89,9 +151,6 @@ $WebClient = New-Object System.Net.WebClient
 $fileURL = "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx"
 $fileDownloadLocalPath = "$env:Temp\Microsoft.VCLibs.x64.14.00.Desktop.appx"
 $WebClient.DownloadFile($fileURL, $fileDownloadLocalPath)
-
-# Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx `
-#                   -outfile $env:Temp\Microsoft.VCLibs.x64.14.00.Desktop.appx
 
 # This will not work if a Windows Terminal window is already open
 Write-Host "Any software that uses VCLibs should be closed." -ForegroundColor DarkMagenta
@@ -112,6 +171,7 @@ Add-AppxPackage $fileDownloadLocalPath
 # Removing installation file
 Remove-Item $fileDownloadLocalPath 
 
+Write-Host "Proceeding with validation" -ForegroundColor DarkYellow
 $vclibsList = Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor
 if([string]::IsNullorEmpty($vclibsList)) {
     Write-Host "Microsoft.VCLibs.140.00.UWPDesktop installation failure" -ForegroundColor DarkRed
@@ -120,63 +180,4 @@ if([string]::IsNullorEmpty($vclibsList)) {
     throw "Microsoft.VCLibs.140.00.UWPDesktop installation failure"
 } else {
     Write-Host "Microsoft.VCLibs.140.00.UWPDesktop sucessfully installed" -ForegroundColor DarkGreen
-}
-
-# This is necessary to check when running in Windows Sandbox and on Windows Server
-# Winget and Windows Terminal will not run without Microsoft.UI.Xaml
-# Both versions 2.7 and 2.8 are necessary
-Write-Host "Checking Microsoft UI XAML status" -ForegroundColor DarkYellow
-
-[String]$UIXAML_VersionToLookFor = "7.2208.15002.0"
-$UIXAML_List = Get-AppxPackage Microsoft.UI.Xaml.2.7 | Where-Object version -ge $UIXAML_VersionToLookFor
-if([string]::IsNullorEmpty($UIXAML_List)) {
-    Write-Host "Microsoft.UI.Xaml version missing" -ForegroundColor DarkMagenta
-    Write-Host "Initialising install of Microsoft.UI.Xaml" -ForegroundColor DarkYellow
-
-    $WebClient = New-Object System.Net.WebClient
-    # https://github.com/microsoft/microsoft-ui-xaml/releases?q=xaml&expanded=true
-    $fileURL = "https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.7.3/Microsoft.UI.Xaml.2.7.x64.appx"
-    $fileDownloadLocalPath = "$env:Temp\Microsoft.UI.Xaml.2.7.x64.appx"
-    $WebClient.DownloadFile($fileURL, $fileDownloadLocalPath)
-
-    # Installing the component
-    Add-AppxPackage $fileDownloadLocalPath 
-    # Removing installation file
-    Remove-Item $fileDownloadLocalPath 
-
-    $UIXAML_List = Get-AppxPackage Microsoft.UI.Xaml.2.7 | Where-Object version -ge $UIXAML_VersionToLookFor
-    if([string]::IsNullorEmpty($UIXAML_List)) {
-        Write-Error "Microsoft UI Xaml installation failed."
-    } else {
-        Write-Host "Microsoft UI Xaml installed successfully" -ForegroundColor DarkGreen
-    }
-} else {
-    Write-Host "Microsoft.UI.Xaml.2.7 present" -ForegroundColor DarkGreen
-}
-
-$UIXAML_VersionToLookFor = "8.2306.22001.0"
-$UIXAML_List = Get-AppxPackage Microsoft.UI.Xaml.2.8 | Where-Object version -ge $UIXAML_VersionToLookFor
-if([string]::IsNullorEmpty($UIXAML_List)) {
-    Write-Host "Microsoft.UI.Xaml version missing" -ForegroundColor DarkMagenta
-    Write-Host "Initialising install of Microsoft.UI.Xaml" -ForegroundColor DarkYellow
-
-    $WebClient = New-Object System.Net.WebClient
-    # https://github.com/microsoft/microsoft-ui-xaml/releases?q=xaml&expanded=true
-    $fileURL = "https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.5/Microsoft.UI.Xaml.2.8.x64.appx"
-    $fileDownloadLocalPath = "$env:Temp\Microsoft.UI.Xaml.2.8.x64.appx"
-    $WebClient.DownloadFile($fileURL, $fileDownloadLocalPath)
-
-    # Installing the component
-    Add-AppxPackage $fileDownloadLocalPath 
-    # Removing installation file
-    Remove-Item $fileDownloadLocalPath 
-
-    $UIXAML_List = Get-AppxPackage Microsoft.UI.Xaml.2.8 | Where-Object version -ge $UIXAML_VersionToLookFor
-    if([string]::IsNullorEmpty($UIXAML_List)) {
-        Write-Error "Microsoft UI Xaml installation failed."
-    } else {
-        Write-Host "Microsoft UI Xaml installed successfully" -ForegroundColor DarkGreen
-    }
-} else {
-    Write-Host "Microsoft.UI.Xaml.2.8 present" -ForegroundColor DarkGreen
 }
