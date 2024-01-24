@@ -174,9 +174,8 @@ Remove-Item $fileDownloadLocalPath
 Write-Host "Proceeding with validation" -ForegroundColor DarkYellow
 $vclibsList = Get-AppxPackage Microsoft.VCLibs.140.00.UWPDesktop | Where-Object version -ge $VersionToLookFor
 if([string]::IsNullorEmpty($vclibsList)) {
-    Write-Host "Microsoft.VCLibs.140.00.UWPDesktop installation failure" -ForegroundColor DarkRed
-    Write-Host "This script will terminate in 7 seconds" -ForegroundColor DarkRed
-    Start-Sleep -Seconds 7
+    Write-Error "Microsoft.VCLibs.140.00.UWPDesktop installation failure"
+    Start-Sleep -Seconds 3
     throw "Microsoft.VCLibs.140.00.UWPDesktop installation failure"
 } else {
     Write-Host "Microsoft.VCLibs.140.00.UWPDesktop sucessfully installed" -ForegroundColor DarkGreen
