@@ -76,12 +76,12 @@ $chocoInstallPath = "$Env:ProgramData/chocolatey/choco.exe"
 if (Test-Path "$chocoInstallPath") {
     $ChocolateyInstalled = $True
     if($BypassChocolatey) {
-        Write-Error "Chocolatey is present, but bypass is enabled" -ForegroundColor DarkYellow
-        Write-Error "Proceeding with manual install." -ForegroundColor DarkYellow
+        Write-Host "Chocolatey is present, but bypass is enabled" -ForegroundColor DarkYellow
+        Write-Host "Proceeding with manual install." -ForegroundColor DarkYellow
         $MustUseChocolatey = $False
         Start-Sleep -Seconds 5
     } else {
-        Write-Error "Chocolatey is present. Proceeding with Chocolatey install." -ForegroundColor DarkGreen
+        Write-Host "Chocolatey is present. Proceeding with Chocolatey install." -ForegroundColor DarkGreen
         $MustUseChocolatey = $True
     }
 } else {
