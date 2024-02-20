@@ -94,11 +94,6 @@ if (Test-Path "$chocoInstallPath") {
     Write-Error "Proceeding with manual install." -ForegroundColor DarkYellow
 }
 
-
-# TODO BELOW
-
-
-
 if($ForceReinstall) {
     Write-Host "FORCED (RE)INSTALL ENABLED." -ForegroundColor DarkYellow
     Write-Host "Skipping version check." -ForegroundColor DarkYellow
@@ -130,7 +125,6 @@ if($MustUninstall) {
     }
     Get-AppxPackage "Microsoft.VCLibs.140.00.UWPDesktop" | remove-AppxPackage -allusers
 }
-
 
 Write-Host "Installing VCLibs package" -ForegroundColor DarkYellow
 
